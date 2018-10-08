@@ -211,28 +211,17 @@ namespace math
         friend std::istream& operator>> (std::istream& is, Rational& u)
         {
             is >> u.a;
-            if (is.good())
+            if (is.good() && is.peek() == '/')
             {
-                if (is.peek() == '/')
-                {
-                    char bar = '\0';
-                    Unsigned d;
-                    is >> bar >> d;
-                    u.b = d;
-                    u.reduce();
-                    if (!is.good())
-                    {
-                        is.setstate(std::ios_base::failbit);
-                    }
-                }
-                else
-                {
-                    u.b = 1;
-                }
+                is.ignore(1);
+                Unsigned d = 1;
+                is >> d;
+                u.b = d;
+                u.reduce();
             }
             else
             {
-                is.setstate(std::ios_base::failbit);
+                u.b = 1;
             }
             return is;
         }
