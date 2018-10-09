@@ -2,6 +2,7 @@
 #define MATH_RATIONAL_H
 
 #include "math_Integer.h"
+#include <cmath>
 
 namespace math
 {
@@ -26,6 +27,35 @@ namespace math
             a(numerator),
             b(denominator)
         {
+            reduce();
+        }
+
+        Rational(double x) :
+            a(0),
+            b(1)
+        {
+            if (!std::isfinite(x))
+            {
+                throw std::runtime_error("Error: Rational::double");
+            }
+            int exponent = 0;
+            x = std::frexp(x, &exponent);
+            for (int i = 0; x != 0 && i < 80; ++i)
+            {
+                double bit = 0;
+                x = std::modf(x * 2, &bit);
+                a <<= 1;
+                a += static_cast<std::int32_t>(bit);
+                --exponent;
+            }
+            if (exponent > 0)
+            {
+                a <<= exponent;
+            }
+            else
+            {
+                b <<= -exponent;
+            }
             reduce();
         }
 
