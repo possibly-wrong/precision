@@ -52,7 +52,7 @@ namespace math
             {
                 a <<= exponent;
             }
-            else
+            else if (exponent < 0)
             {
                 b <<= -exponent;
             }
@@ -219,6 +219,31 @@ namespace math
         Integer denominator() const
         {
             return b;
+        }
+
+        // Truncate to given max. number of digits to right of decimal point.
+        std::string to_string(size_t precision) const
+        {
+            std::ostringstream oss;
+            if (a.signum() < 0)
+            {
+                oss << "-";
+            }
+            Unsigned q;
+            Unsigned r = a.abs();
+            r.divide(b.abs(), q, r);
+            oss << q;
+            if (r != 0)
+            {
+                oss << ".";
+                for (size_t i = 0; r != 0 && i < precision; ++i)
+                {
+                    r *= 10;
+                    r.divide(b.abs(), q, r);
+                    oss << q;
+                }
+            }
+            return oss.str();
         }
 
         std::string to_string() const
