@@ -365,8 +365,9 @@ namespace math
             return *this;
         }
 
-        friend Unsigned and_not(Unsigned u, const Unsigned& v)
+        Unsigned and_not(const Unsigned& v) const
         {
+            Unsigned u(*this);
             const size_t n = v.digits.size();
             if (u.digits.size() > n)
             {
@@ -456,6 +457,14 @@ namespace math
         friend bool operator!= (const Unsigned& u, const Unsigned& v)
         {
             return (u.digits != v.digits);
+        }
+
+        // Return 1 + floor(log2(u)), or 0 for u == 0.
+        int bits() const
+        {
+            size_t count = (digits.size() - 1) * BITS;
+            for (Digit u = digits.back(); u != 0; u >>= 1, ++count);
+            return static_cast<int>(count);
         }
 
         Digit to_uint() const

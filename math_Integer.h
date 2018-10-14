@@ -255,12 +255,12 @@ namespace math
                 if (sign > 0 && rhs.sign < 0)
                 {
                     // u & -v == u & ~(v-1)
-                    mag = and_not(mag, --rhs.mag);
+                    mag = mag.and_not(--rhs.mag);
                 }
                 else if (sign < 0 && rhs.sign > 0)
                 {
                     --mag;
-                    mag = and_not(rhs.mag, mag);
+                    mag = rhs.mag.and_not(mag);
                 }
                 else
                 {
@@ -330,13 +330,14 @@ namespace math
             {
                 // u | -v == -((v-1) & ~u + 1)
                 sign = -1;
-                mag = and_not(--rhs.mag, mag);
+                --rhs.mag;
+                mag = rhs.mag.and_not(mag);
                 ++mag;
             }
             else if (sign < 0 && rhs.sign > 0)
             {
                 --mag;
-                mag = and_not(mag, rhs.mag);
+                mag = mag.and_not(rhs.mag);
                 ++mag;
             }
             else

@@ -3,6 +3,7 @@
 
 #include "math_Integer.h"
 #include <cmath>
+#include <cfloat>
 
 namespace math
 {
@@ -36,11 +37,11 @@ namespace math
         {
             if (!std::isfinite(x))
             {
-                throw std::runtime_error("Error: Rational::double");
+                throw std::range_error("Error: Rational::double");
             }
             int exponent = 0;
             x = std::frexp(x, &exponent);
-            for (int i = 0; x != 0 && i < 80; ++i)
+            for (int j = 0; x != 0 && j < DBL_MANT_DIG; ++j)
             {
                 double bit = 0;
                 x = std::modf(x * 2, &bit);
@@ -221,25 +222,96 @@ namespace math
             return b;
         }
 
-        // Truncate to given max. number of digits to right of decimal point.
-        std::string to_string(size_t precision) const
+        double to_double() const
+        {
+            // Compute a/b = n/d * 2^exponent, with 1/4 < n/d < 1.
+            Unsigned n = a.abs();
+            Unsigned d = b.abs();
+            int exponent = n.bits() - d.bits() + 1;
+            if (exponent > 0)
+            {
+                d <<= exponent;
+            }
+            else if (exponent < 0)
+            {
+                n <<= -exponent;
+            }
+
+            // Shift to ensure 1/2 <= n/d < 1.
+            Unsigned r = n << 1;
+            if (r < d)
+            {
+                n = r;
+                --exponent;
+            }
+
+            // Reduce mantissa bits for subnormals.
+            int bits = DBL_MANT_DIG;
+            if (exponent < DBL_MIN_EXP)
+            {
+                bits = std::max(0, bits - (DBL_MIN_EXP - exponent));
+            }
+
+            // Shift to integer mantissa and round to even.
+            n <<= bits;
+            exponent -= bits;
+            n.divide(d, n, r);
+            r <<= 1;
+            if (r > d || (r == d && (n & 1) != 0))
+            {
+                ++n;
+            }
+
+            // Convert to double (assume BITS <= DBL_MANT_DIG <= 2*BITS).
+            double x = std::ldexp(std::ldexp((n >> Unsigned::BITS).to_uint(),
+                Unsigned::BITS) + n.to_uint(), exponent);
+            return ((a.signum() < 0) ? -x : x);
+        }
+
+        Rational round(size_t digits = 0) const
+        {
+            // Compute d = 10 ^ digits.
+            Unsigned n = 10;
+            Unsigned d = 1;
+            for (size_t j = digits; j != 0; j >>= 1)
+            {
+                if ((j & 1) != 0)
+                {
+                    d *= n;
+                }
+                n *= n;
+            }
+
+            // Shift decimal point and round to even.
+            n = a.abs() * d;
+            Unsigned r;
+            n.divide(b.abs(), n, r);
+            r <<= 1;
+            if (r > b.abs() || (r == b.abs() && (n & 1) != 0))
+            {
+                ++n;
+            }
+            return Rational((a.signum() < 0) ? -Integer(n) : n, d);
+        }
+
+        std::string to_string(size_t digits) const
         {
             std::ostringstream oss;
-            if (a.signum() < 0)
+            Rational w = round(digits);
+            if (w.a.signum() < 0)
             {
                 oss << "-";
             }
-            Unsigned q;
-            Unsigned r = a.abs();
-            r.divide(b.abs(), q, r);
+            Unsigned q, r = w.a.abs();
+            r.divide(w.b.abs(), q, r);
             oss << q;
             if (r != 0)
             {
                 oss << ".";
-                for (size_t i = 0; r != 0 && i < precision; ++i)
+                for (size_t j = 0; r != 0 && j < digits; ++j)
                 {
                     r *= 10;
-                    r.divide(b.abs(), q, r);
+                    r.divide(w.b.abs(), q, r);
                     oss << q;
                 }
             }
@@ -265,18 +337,61 @@ namespace math
 
         friend std::istream& operator>> (std::istream& is, Rational& u)
         {
-            is >> u.a;
-            if (is.good() && is.peek() == '/')
+            char sign = '\0';
+            is >> sign;
+            if (is.good())
             {
-                is.ignore(1);
-                Unsigned d = 1;
-                is >> d;
-                u.b = d;
-                u.reduce();
+                if (std::isdigit(sign))
+                {
+                    is.putback(sign);
+                    sign = '+';
+                }
+                if ((sign == '+' || sign == '-') && std::isdigit(is.peek()))
+                {
+                    is >> u.a;
+                    u.b = 1;
+                    if (is.good())
+                    {
+                        switch (is.peek())
+                        {
+                        case '/':
+                        {
+                            is.ignore(1);
+                            Unsigned d = 1;
+                            is >> d;
+                            u.b = d;
+                            break;
+                        }
+                        case '.':
+                        {
+                            is.ignore(1);
+                            char digit = '\0';
+                            while (std::isdigit(is.peek()))
+                            {
+                                is >> digit;
+                                u.a = 10 * u.a + (digit - '0');
+                                u.b *= 10;
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                        }
+                    }
+                    if (sign == '-')
+                    {
+                        u.a = -u.a;
+                    }
+                    u.reduce();
+                }
+                else
+                {
+                    is.setstate(std::ios_base::failbit);
+                }
             }
             else
             {
-                u.b = 1;
+                is.setstate(std::ios_base::failbit);
             }
             return is;
         }
@@ -290,7 +405,7 @@ namespace math
             switch (b.signum())
             {
             case 0:
-                throw std::domain_error("Error: Rational::divbyzero");
+                throw std::overflow_error("Error: Rational::overflow");
                 break;
             case -1:
                 a = -a;
