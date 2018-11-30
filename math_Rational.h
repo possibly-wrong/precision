@@ -322,35 +322,30 @@ namespace math
 
         std::string to_precise_string()
         {
-            std::string str;
-            std::map<math::Integer, std::map<math::Integer, unsigned long>> h;
-            if (a.signum() < 0) str.append("-");
+            std::string s;
+            if (a.signum() < 0) s.append("-");
             math::Unsigned q, r = a.abs();
             r.divide(b.abs(), q, r);
-            str.append(q.to_string());
+            s.append(q.to_string());
             if (r != 0)
             {
-                str.append(".");
+                s.append(".");
+                std::map<math::Integer, std::map<math::Integer, unsigned long>> h;
                 while (r != 0)
                 {
                     r *= 10;
                     r.divide(b.abs(), q, r);
-                    std::map<math::Integer, unsigned long> * rp = nullptr;
-                    auto r_found = h.find(r);
-                    if (r_found != h.end()) rp = & h.at(r);
+                    std::map<math::Integer, unsigned long>* rp = nullptr;
+                    if (h.find(r) != h.end()) rp = &h.at(r);
                     if (rp != nullptr && rp->find(q) != rp->end())
-                        return str.substr(0, rp->at(q)) + "(" +
-                               str.substr(rp->at(q)) + ")";
-                    str.append(q.to_string());
-                    if (rp == nullptr)
-                    {
-                        h[r] = {};
-                        rp = & h.at(r);
-                    }
-                    if (rp->find(q) == rp->end()) (* rp)[q] = str.length() - 1;
+                        return s.substr(0, rp->at(q)) + "(" +
+                               s.substr(rp->at(q)) + ")";
+                    if (rp == nullptr) { h[r] = {}; rp = &h.at(r); }
+                    if (rp->find(q) == rp->end()) (*rp)[q] = s.length();
+                    s.append(q.to_string());
                 }
             }
-            return str;
+            return s;
         }
 
         std::string to_string() const
