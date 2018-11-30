@@ -324,18 +324,18 @@ namespace math
         {
             std::string s;
             if (a.signum() < 0) s.append("-");
-            math::Unsigned q, r = a.abs();
+            Unsigned q, r = a.abs();
             r.divide(b.abs(), q, r);
             s.append(q.to_string());
             if (r != 0)
             {
                 s.append(".");
-                std::map<math::Integer, std::map<math::Integer, unsigned long>> h;
+                std::map<Integer, std::map<Integer, unsigned long>> h;
                 while (r != 0)
                 {
                     r *= 10;
                     r.divide(b.abs(), q, r);
-                    std::map<math::Integer, unsigned long>* rp = nullptr;
+                    std::map<Integer, unsigned long>* rp = nullptr;
                     if (h.find(r) != h.end()) rp = &h.at(r);
                     if (rp != nullptr && rp->find(q) != rp->end())
                         return s.substr(0, rp->at(q)) + "(" +
