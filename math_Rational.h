@@ -320,7 +320,7 @@ namespace math
             return oss.str();
         }
 
-        std::string to_precise_string()
+        std::string to_precise_string() const
         {
             std::string s;
             if (a.signum() < 0) s.append("-");
