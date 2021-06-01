@@ -31,6 +31,13 @@ namespace math
             reduce();
         }
 
+        Rational(float f) :
+            a(0),
+            b(1)
+        {
+            operator=(Rational(static_cast<double>(f)));
+        }
+
         Rational(double x) :
             a(0),
             b(1)
