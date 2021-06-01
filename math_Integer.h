@@ -408,19 +408,19 @@ namespace math
 
         friend std::istream& operator>> (std::istream& is, Integer& u)
         {
-            char sign = '\0';
-            is >> sign;
+            char _sign = '\0';
+            is >> _sign;
             if (is.good())
             {
-                if (std::isdigit(sign))
+                if (std::isdigit(_sign))
                 {
-                    is.putback(sign);
-                    sign = '+';
+                    is.putback(_sign);
+                    _sign = '+';
                 }
-                if ((sign == '+' || sign == '-') && std::isdigit(is.peek()))
+                if ((_sign == '+' || _sign == '-') && std::isdigit(is.peek()))
                 {
                     is >> u.mag;
-                    u.sign = (sign == '-' ? -1 : 1);
+                    u.sign = (_sign == '-' ? -1 : 1);
                     if (u.mag == 0)
                     {
                         u.sign = 0;
