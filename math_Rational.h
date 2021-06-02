@@ -41,7 +41,8 @@ namespace math
             }
             int exponent = 0;
             x = std::frexp(x, &exponent);
-            for (int j = 0; x != 0 && j < DBL_MANT_DIG; ++j)
+            for (int j = 0;
+                std::fpclassify(x) != FP_ZERO && j < DBL_MANT_DIG; ++j)
             {
                 double bit = 0;
                 x = std::modf(x * 2, &bit);

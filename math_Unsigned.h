@@ -255,15 +255,16 @@ namespace math
                 {
                     size_t i = n;
                     for (; i != 0 && r.digits[j + i] == w.digits[i]; --i);
-                    if ((is_trial = (r.digits[j + i] < w.digits[i])))
+                    is_trial = (r.digits[j + i] < w.digits[i]);
+                    if (is_trial)
                     {
                         // Adjust partial product (w -= v).
                         --qhat;
                         k = 0;
-                        for (size_t i = 0; i < n; ++i)
+                        for (size_t i2 = 0; i2 < n; ++i2)
                         {
-                            k = k + w.digits[i] - v.digits[i];
-                            w.digits[i] = static_cast<Digit>(k);
+                            k = k + w.digits[i2] - v.digits[i2];
+                            w.digits[i2] = static_cast<Digit>(k);
                             k = ((k >> BITS) ? -1 : 0);
                         }
                         w.digits[n] = static_cast<Digit>(k + w.digits[n]);
